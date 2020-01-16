@@ -204,20 +204,20 @@ function startNeverEndingGame (images) {
 
 	game.addUIElement(infoBox);
 	
-	$(mainCanvas)
-	.mousemove(function (e) {
-		game.setMouseX(e.pageX);
-		game.setMouseY(e.pageY);
-		player.resetDirection();
-		player.startMovingIfPossible();
-	})
-	.bind('click', function (e) {
-		game.setMouseX(e.pageX);
-		game.setMouseY(e.pageY);
-		player.resetDirection();
-		player.startMovingIfPossible();
-	})
-	.focus(); // So we can listen to events immediately
+	// $(mainCanvas)
+	// .mousemove(function (e) {
+	// 	game.setMouseX(e.pageX);
+	// 	game.setMouseY(e.pageY);
+	// 	player.resetDirection();
+	// 	player.startMovingIfPossible();
+	// })
+	// .bind('click', function (e) {
+	// 	game.setMouseX(e.pageX);
+	// 	game.setMouseY(e.pageY);
+	// 	player.resetDirection();
+	// 	player.startMovingIfPossible();
+	// })
+	// .focus(); // So we can listen to events immediately
 
 	Mousetrap.bind('f', player.speedBoost);
 	Mousetrap.bind('t', player.attemptTrick);
@@ -265,6 +265,50 @@ function startNeverEndingGame (images) {
 	player.isMoving = false;
 	player.setDirection(270);
 
+	var cionic = new cionicjs.Cionic({
+		streamLogger: function(msg, cls) {
+			var logDiv = document.getElementById('log');
+			logDiv.innerHTML += '<div class="'+cls+'">&gt;&nbsp;' + msg + '</div>';
+			logDiv.scrollTop = logDiv.scrollHeight;
+	}});
+
+	// add Cionic listeners
+	cionic.Stream.registerListener('lPress', function(isPressed) {
+		if (isPressed === 'ON') {
+			if (player.direction === 270) {
+				player.stepWest();
+			} else {
+				player.turnWest();
+			}
+		}
+	});
+
+	cionic.Stream.registerListener('rPress', function(isPressed) {
+		if (isPressed === 'ON') {
+			if (player.direction === 90) {
+				player.stepEast();
+			} else {
+				player.turnEast();
+			}
+		}
+	});
+
+	cionic.Stream.registerListener('uPress', function(isPressed) {
+		if (isPressed === 'ON') player.stop();
+	});
+
+	cionic.Stream.registerListener('dPress', function(isPressed) {
+		if (isPressed === 'ON') {
+			player.setDirection(180);
+			player.startMovingIfPossible();
+		}
+	});
+
+	document.getElementById('cionic-connect').onclick = function () {
+		var host = document.getElementById('host').value;
+		cionic.Stream.socket(host);
+	};
+
 	game.start();
 }
 
@@ -273,6 +317,8 @@ function resizeCanvas() {
 	mainCanvas.height = window.innerHeight;
 }
 
+
+
 window.addEventListener('resize', resizeCanvas, false);
 
 resizeCanvas();
@@ -280,3 +326,45 @@ resizeCanvas();
 loadImages(imageSources, startNeverEndingGame);
 
 this.exports = window;
+
+// $(document).ready(function() {
+// 	// instantiate Cionic SDK
+// 	var cionic = new cionicjs.Cionic({
+// 		streamLogger: function(msg, cls) {
+// 			var logDiv = document.getElementById('log');
+// 			logDiv.innerHTML += '<div class="'+cls+'">&gt;&nbsp;' + msg + '</div>';
+// 			logDiv.scrollTop = logDiv.scrollHeight;
+// 	}});
+
+// 	// add Cionic listeners
+// 	cionic.Stream.registerListener('lPress', function(isPressed) {
+// 		console.log('l', isPressed);
+// 		if (player.direction === 270) {
+// 			player.stepWest();
+// 		} else {
+// 			player.turnWest();
+// 		}
+// 	});
+
+// 	cionic.Stream.registerListener('rPress', function(isPressed) {
+// 		if (player.direction === 90) {
+// 			player.stepEast();
+// 		} else {
+// 			player.turnEast();
+// 		}
+// 	});
+
+// 	cionic.Stream.registerListener('uPress', function(isPressed) {
+// 		player.stop();
+// 	});
+
+// 	cionic.Stream.registerListener('dPress', function(isPressed) {
+// 		player.setDirection(180);
+// 		player.startMovingIfPossible();
+// 	});
+
+// 	document.getElementById('cionic-connect').onclick = function () {
+// 		var host = document.getElementById('host').value;
+// 		cionic.Stream.socket(host);
+// 	};
+// });

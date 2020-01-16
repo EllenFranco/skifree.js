@@ -69,9 +69,9 @@ var EventedLoop = require('eventedloop');
 			// Clear canvas
 			var mouseMapPosition = dContext.canvasPositionToMapPosition([mouseX, mouseY]);
 
-			if (!player.isJumping) {
-				player.setMapPositionTarget(mouseMapPosition[0], mouseMapPosition[1]);
-			}
+			// if (!player.isJumping) {
+			// 	player.setMapPositionTarget(mouseMapPosition[0], mouseMapPosition[1]);
+			// }
 
 			intervalNum++;
 
