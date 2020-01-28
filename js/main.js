@@ -315,8 +315,10 @@ function startNeverEndingGame (images) {
 	}
 
 	downloadButton.onclick = function() {
-		var fn = Math.random().toString(36).substring(2, 8);
-		canvasRecorder.download(fn);
+		var now = new Date();
+		var iso = now.toISOString().split('.')[0];
+		var fn = 'skiing-' + iso;
+		canvasRecorder.download(fn); 
 	}
 
 	var monitorAPI = new cionicjs.MonitorAPI({verbose: false});
