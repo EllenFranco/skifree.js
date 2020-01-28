@@ -4,7 +4,6 @@ require('./lib/extenders');
 require('./lib/plugins');
 
 // External dependencies
-var Hammer = require('hammerjs');
 var Mousetrap = require('br-mousetrap');
 
 // Method modules
@@ -246,22 +245,6 @@ function startNeverEndingGame (images) {
 	Mousetrap.bind('b', spawnBoarder);
 	Mousetrap.bind('space', resetGame);
 
-	var hammertime = Hammer(mainCanvas).on('press', function (e) {
-		e.preventDefault();
-		game.setMouseX(e.gesture.center.x);
-		game.setMouseY(e.gesture.center.y);
-	}).on('tap', function (e) {
-		game.setMouseX(e.gesture.center.x);
-		game.setMouseY(e.gesture.center.y);
-	}).on('pan', function (e) {
-		game.setMouseX(e.gesture.center.x);
-		game.setMouseY(e.gesture.center.y);
-		player.resetDirection();
-		player.startMovingIfPossible();
-	}).on('doubletap', function (e) {
-		player.speedBoost();
-	});
-
 	player.isMoving = false;
 	player.setDirection(270);
 
@@ -309,6 +292,37 @@ function startNeverEndingGame (images) {
 		cionic.Stream.socket(host);
 	};
 
+	// record the canvas
+	var isRecording = false;
+	var canvas = document.querySelector('canvas');
+	var recordButton = document.querySelector('button#record');
+	var downloadButton = document.querySelector('button#download');
+
+	var canvasRecorder = new cionicjs.CanvasRecorder({canvas: canvas, recordButton: recordButton, downloadButton: downloadButton});
+
+	recordButton.onclick = function() {
+		if (!isRecording) {
+			canvasRecorder.startRecording();
+			recordButton.textContent = 'Stop Recording'
+			downloadButton.disabled = true;
+			isRecording = true;
+		} else {
+			canvasRecorder.stopRecording();
+			recordButton.textContent = 'Start Recording';
+			downloadButton.disabled = false;
+			isRecording = false;
+		}
+	}
+
+	downloadButton.onclick = function() {
+		var fn = Math.random().toString(36).substring(2, 8);
+		canvasRecorder.download(fn);
+	}
+
+	var monitorAPI = new cionicjs.MonitorAPI({verbose: false});
+	monitorAPI.addPlayer(cionic);
+	monitorAPI.main()
+
 	game.start();
 }
 
@@ -316,8 +330,6 @@ function resizeCanvas() {
 	mainCanvas.width = window.innerWidth;
 	mainCanvas.height = window.innerHeight;
 }
-
-
 
 window.addEventListener('resize', resizeCanvas, false);
 
