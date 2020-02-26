@@ -36,6 +36,13 @@ var loseLifeOnObstacleHit = false;
 var dropRates = {smallTree: 4, tallTree: 2, jump: 1, thickSnow: 1, rock: 1};
 if (localStorage.getItem('highScore')) highScore = localStorage.getItem('highScore');
 
+var cionic = new cionicjs.Cionic({
+	streamLogger: function(msg, cls) {
+		var logDiv = document.getElementById('log');
+		logDiv.innerHTML += '<div class="'+cls+'">&gt;&nbsp;' + msg + '</div>';
+		logDiv.scrollTop = logDiv.scrollHeight;
+}});
+
 function loadImages (sources, next) {
 	var loaded = 0;
 	var images = {};
@@ -74,6 +81,9 @@ function startNeverEndingGame (images) {
 	var infoBox;
 	var game;
 
+	// metrics
+	var startTime = new Date().getTime();
+
 	function resetGame () {
 		distanceTravelledInMetres = 0;
 		livesLeft = 5;
@@ -89,7 +99,20 @@ function startNeverEndingGame (images) {
 				'Game over!',
 				'Hit space to restart'
 			]);
+			
+			// send metrics
+			if (isRecording) {
+				var endTime = new Date().getTime();
+				var metric = {
+					startTime: startTime,
+					endTime: endTime,
+					score: distanceTravelledInMetres
+				};
+				cionic.sendJSON('metrics', metric);
+			}
+
 			game.pause();
+			startTime = new Date().getTime();
 			game.cycle();
 		}
 	}
@@ -248,15 +271,8 @@ function startNeverEndingGame (images) {
 	player.isMoving = false;
 	player.setDirection(270);
 
-	var cionic = new cionicjs.Cionic({
-		streamLogger: function(msg, cls) {
-			var logDiv = document.getElementById('log');
-			logDiv.innerHTML += '<div class="'+cls+'">&gt;&nbsp;' + msg + '</div>';
-			logDiv.scrollTop = logDiv.scrollHeight;
-	}});
-
 	// add Cionic listeners
-	cionic.Stream.registerListener('lPress', function(isPressed) {
+	cionic.addListener('lPress', function(isPressed) {
 		if (isPressed === 'ON') {
 			if (player.direction === 270) {
 				player.stepWest();
@@ -266,7 +282,7 @@ function startNeverEndingGame (images) {
 		}
 	});
 
-	cionic.Stream.registerListener('rPress', function(isPressed) {
+	cionic.addListener('rPress', function(isPressed) {
 		if (isPressed === 'ON') {
 			if (player.direction === 90) {
 				player.stepEast();
@@ -276,16 +292,24 @@ function startNeverEndingGame (images) {
 		}
 	});
 
-	cionic.Stream.registerListener('uPress', function(isPressed) {
+	cionic.addListener('uPress', function(isPressed) {
 		if (isPressed === 'ON') player.stop();
 	});
 
-	cionic.Stream.registerListener('dPress', function(isPressed) {
+	cionic.addListener('dPress', function(isPressed) {
 		if (isPressed === 'ON') {
 			player.setDirection(180);
 			player.startMovingIfPossible();
 		}
 	});
+
+	cionic.addListener('record', function(action) {
+		if (action == 'start') {
+			startRecording();
+		} else if (action == 'stop') {
+			stopRecording();
+		}
+	}.bind(this));
 
 	document.getElementById('cionic-connect').onclick = function () {
 		var host = document.getElementById('host').value;
@@ -297,20 +321,35 @@ function startNeverEndingGame (images) {
 	var canvas = document.querySelector('canvas');
 	var recordButton = document.querySelector('button#record');
 	var downloadButton = document.querySelector('button#download');
+	var canvasRecorder = new cionicjs.CanvasRecorder({
+		canvas: canvas, 
+		onStop: function() {
+			var blob = new Blob(canvasRecorder._recordedBlobs, {
+				type: 'video/webm'
+			});
+			cionic.sendBinary(blob);
+		}
+	});
 
-	var canvasRecorder = new cionicjs.CanvasRecorder({canvas: canvas, recordButton: recordButton, downloadButton: downloadButton});
+	function startRecording() {
+		canvasRecorder.startRecording();
+		recordButton.textContent = 'Stop Recording'
+		downloadButton.disabled = true;
+		isRecording = true;
+	}
+
+	function stopRecording() {
+		canvasRecorder.stopRecording();
+		recordButton.textContent = 'Start Recording';
+		downloadButton.disabled = false;
+		isRecording = false;
+	}
 
 	recordButton.onclick = function() {
 		if (!isRecording) {
-			canvasRecorder.startRecording();
-			recordButton.textContent = 'Stop Recording'
-			downloadButton.disabled = true;
-			isRecording = true;
+			startRecording();
 		} else {
-			canvasRecorder.stopRecording();
-			recordButton.textContent = 'Start Recording';
-			downloadButton.disabled = false;
-			isRecording = false;
+			stopRecording();
 		}
 	}
 
