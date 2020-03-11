@@ -331,6 +331,12 @@ function startNeverEndingGame (images) {
 		}
 	});
 
+	// hide buttons if cannot record (ie not on Chrome or Firefox)
+	if (!canvasRecorder.canRecord) {
+		$('#record').hide();
+		$('#download').hide();
+	}
+
 	function startRecording() {
 		canvasRecorder.startRecording();
 		recordButton.textContent = 'Stop Recording'
