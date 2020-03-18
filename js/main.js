@@ -272,7 +272,7 @@ function startNeverEndingGame (images) {
 	player.setDirection(270);
 
 	// add Cionic listeners
-	cionic.addListener('lPress', function(isPressed) {
+	cionic.addListener('37', function(isPressed) {
 		if (isPressed === 'ON') {
 			if (player.direction === 270) {
 				player.stepWest();
@@ -282,7 +282,7 @@ function startNeverEndingGame (images) {
 		}
 	});
 
-	cionic.addListener('rPress', function(isPressed) {
+	cionic.addListener('39', function(isPressed) {
 		if (isPressed === 'ON') {
 			if (player.direction === 90) {
 				player.stepEast();
@@ -292,11 +292,11 @@ function startNeverEndingGame (images) {
 		}
 	});
 
-	cionic.addListener('uPress', function(isPressed) {
+	cionic.addListener('38', function(isPressed) {
 		if (isPressed === 'ON') player.stop();
 	});
 
-	cionic.addListener('dPress', function(isPressed) {
+	cionic.addListener('40', function(isPressed) {
 		if (isPressed === 'ON') {
 			player.setDirection(180);
 			player.startMovingIfPossible();
